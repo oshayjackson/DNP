@@ -1,5 +1,30 @@
+/* eslint-disable no-unused-vars */
 import React from "react";
 import axios from "axios";
+
+const deleteObject = (id) => {
+  fetch(`http://127.0.0.1:8000/home/${id}/`, {
+    method: "DELETE",
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to delete object");
+      }
+      // Object deleted successfully
+    })
+    .catch((error) => {
+      console.error("Error deleting object:", error);
+    });
+};
+
+axios
+  .delete(`http://127.0.0.1:8000/home/1/`)
+  .then((response) => {
+    console.log("Object deleted successfully:", response);
+  })
+  .catch((error) => {
+    console.error("Error deleting object:", error);
+  });
 
 class App extends React.Component {
   state = {
@@ -9,18 +34,19 @@ class App extends React.Component {
   };
 
   componentDidMount() {
-    let data;
+    this.fetchData();
+  }
 
+  fetchData = () => {
     axios
-      .get("http://localhost:8000/wel/")
+      .get("http://localhost:8000/home")
       .then((res) => {
-        data = res.data;
         this.setState({
-          details: data,
+          details: res.data,
         });
       })
       .catch((err) => {});
-  }
+  };
 
   renderSwitch = (param) => {
     switch (param + 1) {
@@ -51,22 +77,32 @@ class App extends React.Component {
     e.preventDefault();
 
     axios
-      .post("http://localhost:8000/wel/", {
+      .post("http://localhost:8000/home", {
         name: this.state.user,
         detail: this.state.quote,
       })
       .then((res) => {
         this.setState({
-          user: "",
-          quote: "",
+          user: "", // Clear user input field
+          quote: "", // Clear quote input field
         });
+        this.fetchData(); // Fetch data after successful submission
+      })
+      .catch((err) => {});
+  };
+
+  handleDelete = (id) => {
+    axios
+      .delete(`http://localhost:8000/home/${id}/`)
+      .then((res) => {
+        this.fetchData(); // Fetch data after successful deletion
       })
       .catch((err) => {});
   };
 
   render() {
     return (
-      <div className="container jumbotron ">
+      <div className="container jumbotron">
         <form onSubmit={this.handleSubmit}>
           <div className="input-group mb-3">
             <div className="input-group-prepend">
@@ -120,6 +156,11 @@ class App extends React.Component {
               <div
                 className={"bg-" + this.renderSwitch(id % 6) + " card-header"}>
                 Quote {id + 1}
+                <button
+                  className="btn btn-danger btn-sm float-right"
+                  onClick={() => this.handleDelete(detail.id)}>
+                  Delete
+                </button>
               </div>
               <div className="card-body">
                 <blockquote
@@ -141,4 +182,5 @@ class App extends React.Component {
     );
   }
 }
+
 export default App;
